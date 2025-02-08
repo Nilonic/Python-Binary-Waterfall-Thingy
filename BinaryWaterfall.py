@@ -73,10 +73,21 @@ def play_binary_audio(files, bytes_per_second):
     p.terminate()
 
 def update_visualization(data_chunk, files, current_index, file_size, bytes_per_second, time_remaining, filepath):
-    binary_array = np.unpackbits(np.frombuffer(data_chunk, dtype=np.uint8))[:WATERFALL_SIZE**2]
-    binary_array = binary_array.reshape((WATERFALL_SIZE, WATERFALL_SIZE)) * 255
+    # Unpack the bits from the data chunk.
+    bits = np.unpackbits(np.frombuffer(data_chunk, dtype=np.uint8))
+    required_size = WATERFALL_SIZE ** 2  # This is 128 x 128 = 16384
+    
+    # If there aren't enough bits, pad the array with zeros (empty/black pixels).
+    if bits.size < required_size:
+        padded_bits = np.zeros(required_size, dtype=bits.dtype)
+        padded_bits[:bits.size] = bits
+        bits = padded_bits
+    else:
+        bits = bits[:required_size]
+    
+    binary_array = bits.reshape((WATERFALL_SIZE, WATERFALL_SIZE)) * 255
 
-    # Convert to a 3-channel (RGB) image
+    # Convert to a 3-channel (RGB) image for Pygame.
     binary_surface = pygame.surfarray.make_surface(np.tile(binary_array[..., None], (1, 1, 3)))
     binary_surface = pygame.transform.scale(binary_surface, (SCREEN_WIDTH, SCREEN_HEIGHT))
     screen.fill((50, 50, 50))
@@ -92,7 +103,7 @@ def update_visualization(data_chunk, files, current_index, file_size, bytes_per_
         sidebar.blit(text, (10, 100 + i * 30))
     screen.blit(sidebar, (0, 0))
     
-    # Bottom bar
+    # Bottom bar with file info and remaining time.
     bottom_bar = pygame.Surface((SCREEN_WIDTH + SIDEBAR_WIDTH, BOTTOM_BAR_HEIGHT))
     bottom_bar.fill((20, 20, 20))
     file_type, file_size_bytes, creation_time = get_file_info(filepath)
@@ -108,7 +119,7 @@ def choose_directory():
     if directory:
         files_data = read_files_as_binary(directory)
         if files_data:
-            threading.Thread(target=play_binary_audio, args=(files_data, 44100), daemon=True).start()
+            threading.Thread(target=play_binary_audio, args=(files_data, 48000), daemon=True).start()
 
 def main():
     root = tk.Tk()
