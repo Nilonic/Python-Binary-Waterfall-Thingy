@@ -4,7 +4,7 @@
 > This is not anywhere near good for production use, nor is it good at what it does. It will hurt your ears, and will take up a lot of memory
 
 > [!NOTE]  
-> I will not be updating this any further, unless a breaking change is reported. What you see is what you get
+> I will not be updating this often, unless a breaking change is reported, or i come up with a feature. What you see is what you get
 
 ## To use
 
